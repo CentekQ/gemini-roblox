@@ -2,11 +2,11 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-// ✅ FIX: fetch dla Node/Render
+// fetch dla Node/Render
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-// 🔑 klucz z Render ENV
+// klucz z Render ENV
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post("/gemini", async (req, res) => {
@@ -36,18 +36,13 @@ app.post("/gemini", async (req, res) => {
 
         const data = await response.json();
 
-        console.log("DEBUG GEMINI:", JSON.stringify(data, null, 2));
-
-        const text =
-            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-            "Brak odpowiedzi z Gemini";
-
-        res.json({ response: text });
+        // 🔥 NAJWAŻNIEJSZA ZMIANA (debug – pokazuje prawdziwą odpowiedź API)
+        return res.json(data);
 
     } catch (err) {
         console.log("ERROR:", err);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Server crashed",
             details: err.message
         });

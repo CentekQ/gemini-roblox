@@ -1,32 +1,57 @@
 const express = require("express");
-const fetch = require("node-fetch");
-
 const app = express();
 app.use(express.json());
 
-const GEMINI_API_KEY = "TWOJ_KLUCZ_TUTAJ";
+// ✅ FIX: fetch dla Node/Render
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+// 🔑 klucz z Render ENV
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post("/gemini", async (req, res) => {
-    const prompt = req.body.prompt;
+    try {
+        const prompt = req.body.prompt;
 
-    const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
+        if (!GEMINI_API_KEY) {
+            return res.status(500).json({
+                error: "Brak GEMINI_API_KEY w ENV"
+            });
         }
-    );
 
-    const data = await response.json();
+        const response = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [{ text: prompt }]
+                        }
+                    ]
+                })
+            }
+        );
 
-    const text =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text
-        || "Brak odpowiedzi";
+        const data = await response.json();
 
-    res.json({ response: text });
+        console.log("DEBUG GEMINI:", JSON.stringify(data, null, 2));
+
+        const text =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "Brak odpowiedzi z Gemini";
+
+        res.json({ response: text });
+
+    } catch (err) {
+        console.log("ERROR:", err);
+
+        res.status(500).json({
+            error: "Server crashed",
+            details: err.message
+        });
+    }
 });
 
 const PORT = process.env.PORT || 3000;

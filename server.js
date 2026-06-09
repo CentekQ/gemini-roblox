@@ -9,7 +9,7 @@ const fetch = (...args) =>
 // klucz z ENV (Render)
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// 🔥 endpoint AI
+// endpoint AI
 app.post("/gemini", async (req, res) => {
     try {
         const prompt = req.body.prompt;
@@ -21,7 +21,7 @@ app.post("/gemini", async (req, res) => {
         }
 
         const response = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" +
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
                 GEMINI_API_KEY,
             {
                 method: "POST",
@@ -38,11 +38,9 @@ app.post("/gemini", async (req, res) => {
 
         const data = await response.json();
 
-        // 🧠 bezpieczne wyciąganie odpowiedzi
         const text =
             data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        // jeśli coś poszło nie tak
         if (!text) {
             return res.json({
                 error: "Brak odpowiedzi z Gemini",

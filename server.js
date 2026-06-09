@@ -2,14 +2,14 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-// fetch kompatybilny z Render / Node
+// fetch kompatybilny z Node / Render
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-// klucz z ENV (Render)
+// API KEY z ENV
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// endpoint AI
+// endpoint
 app.post("/gemini", async (req, res) => {
     try {
         const prompt = req.body.prompt;
@@ -29,7 +29,23 @@ app.post("/gemini", async (req, res) => {
                 body: JSON.stringify({
                     contents: [
                         {
-                            parts: [{ text: prompt }]
+                            parts: [
+                                {
+                                    text: `
+Jesteś generatorem skryptów Roblox Studio (Lua).
+
+Zasady:
+- Zwracaj TYLKO kod Lua
+- Nie dodawaj wyjaśnień
+- Kod ma działać w Roblox Studio
+- Twórz obiekty 3D (Part, Model, Workspace)
+- Możesz używać fizyki, CFrame, TweenService
+
+Zadanie:
+${prompt}
+                                    `
+                                }
+                            ]
                         }
                     ]
                 })
@@ -62,7 +78,7 @@ app.post("/gemini", async (req, res) => {
     }
 });
 
-// start serwera
+// start
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
